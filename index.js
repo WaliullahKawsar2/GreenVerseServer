@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 const port = 3000
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(express.json())
 app.use(cors())
 
@@ -11,7 +11,6 @@ app.use(cors())
 const uri = "mongodb+srv://GalleryVerseAdmin:lHMMOWy2TNcgwtfP@cluster0.lsoelsf.mongodb.net/?appName=Cluster0";
 
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -21,6 +20,7 @@ const client = new MongoClient(uri, {
 });
 
 async function run() {
+
   try {
     await client.connect();
     
@@ -31,8 +31,15 @@ async function run() {
     app.get('/arts',async(req, res)=>{
 
         const result = await artsCollection.find().toArray()
-
-
+        res.send(result)
+    })
+    
+    app.get('/arts/:id',async(req, res)=>{
+        
+        const {id} = req.params
+        console.log(id);
+        const result = await artsCollection.findOne({_id: new ObjectId(id)})
+        
         res.send(result)
     })
 
