@@ -3,9 +3,14 @@ const cors = require('cors')
 const app = express()
 const port = 3000
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const admin = require("firebase-admin");
+const serviceAccount = require("./service-key.json");
 app.use(express.json())
 app.use(cors())
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 
 const uri = "mongodb+srv://GalleryVerseAdmin:lHMMOWy2TNcgwtfP@cluster0.lsoelsf.mongodb.net/?appName=Cluster0";
@@ -18,6 +23,27 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+const verifyToken = async (req, res, next) => {
+  const authorization = req.headers.authorization;
+
+  if (!authorization) {
+    return res.status(401).send({
+      message: "unauthorized access. Token not found!",
+    });
+  }
+
+  const token = authorization.split(" ")[1];
+  try {
+    await admin.auth().verifyIdToken(token);
+
+    next();
+  } catch (error) {
+    res.status(401).send({
+      message: "unauthorized access.",
+    });
+  }
+};
 
 async function run() {
 
@@ -76,7 +102,7 @@ async function run() {
         const {id} = req.params
         const objectId = new ObjectId(id)
         
-        const result = await artsCollection.updateOne(filter)
+        const result = await artsCollection.updateOne(objectId)
         
         res.send({
             success : true,
