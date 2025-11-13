@@ -111,6 +111,39 @@ async function run() {
         })
     })
 
+    app.get("/my-gallery", verifyToken, async(req, res) => {
+      const email = req.query.email
+      const result = await artsCollection.find({ createdAt: email}).toArray()
+      res.send(result)
+    })
+
+
+
+     app.post("/favorite/:id", async(req, res) => {
+      const data = req.body
+      const id = req.params.id
+      const result = await favoriteCollection.insertOne(data)
+
+
+      const filter = {_id: new ObjectId(id)}
+      const update = {
+        $inc: {
+          favorites: 1
+        }
+      }
+      const favoriteCounted = await artsCollection.updateOne(filter, update)
+      res.send({result, favoriteCounted})
+    })
+
+    app.get("/my-favorites", verifyToken, async(req, res) => {
+      const email = req.query.email
+      const result = await downloadCollection.find({favorite_by: email}).toArray()
+      res.send(result)
+    })
+
+
+
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
